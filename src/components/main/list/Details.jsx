@@ -25,7 +25,7 @@ const Details = ({ dateData, isDaily, isWeekly }) => {
       const res = await getSpendingCalendar(selectedDate[0], selectedDate[1]);
       setSpendingData(res);
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
+
     }
   };
 

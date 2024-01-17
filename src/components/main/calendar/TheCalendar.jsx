@@ -6,21 +6,26 @@ import { formatPrice, formatDate } from '../../../utils/format';
 import ItemList from './ItemList';
 import Loading from '../../common/Loading';
 import dayjs from 'dayjs';
+import dummyData from '../../dummyData.json'
+import moment from 'moment';
+
 
 const TheCalendar = () => {
+  const [list, setList] = useState(dummyData);
+  console.log(list)
   // getSpendingCalendar API 응답 데이터
   const [spending, setSpending] = useState({});
   // getSpendingCalendar API에 필요한 인수 - 기본값: 오늘 날짜 [2023, 7, 11]
   const [selectedDate, setSelectedDate] = useState(
     formatDate(new Date()).split('-').map(Number),
   );
+
   const [selectedDateDetail, setSelectedDateDetail] = useState([]);
   const [changed, setChanged] = useState(false);
 
   // 월별 조회 API 응답데이터
   const [monthlySpending, setMonthlySpending] = useState();
   const [isLoading, setIsLoading] = useState(false);
-
   const [currentMode, setCurrentMode] = useState('month');
 
   // 소비 달력 조회 API 호출
@@ -31,11 +36,22 @@ const TheCalendar = () => {
       setSelectedDateDetail(res[selectedDate[2]]);
       setSpending(res);
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+
+
+  useEffect(() => {
+    // 랜더링 시 API 호출
+    getSpending();
+    getMonthlyData();
+  }, [changed]);
+  useEffect(() => {
+    // 처음 렌더링 시 오늘의 날짜로 클릭
+    getDetailList(new Date());
+  }, []); // 빈 배열은 처음 렌더링 시에만 실행됨
 
   // 소비항목 변경시 재렌더링을 위한 상태값변경함수
   const itemChangedHandler = async () => {
@@ -43,7 +59,6 @@ const TheCalendar = () => {
       const res = await getSpendingCalendar(selectedDate[0], selectedDate[1]);
       setSelectedDateDetail(res[selectedDate[2]]);
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
     }
     setChanged(!changed);
   };
@@ -54,9 +69,10 @@ const TheCalendar = () => {
       const res = await lookupByDate('monthly');
       setMonthlySpending(res);
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
+
     }
   };
+
 
   // 달력의 월 또는 연도를 변경할 때마다 선택한 날짜에 맞는 소비 데이터를 업데이트하여 화면에 출력
   const handlePanelChange = async (value, mode) => {
@@ -68,10 +84,11 @@ const TheCalendar = () => {
     try {
       const res = await getSpendingCalendar(value.year(), value.month() + 1);
       setSpending(res);
+
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
     }
   };
+
   // 랜더링 시 API 호출
   useEffect(() => {
     getSpending();
@@ -87,100 +104,94 @@ const TheCalendar = () => {
 
   const getDetailList = async (date) => {
     try {
-      const day = formatDate(date).split('-')[2];
-      setSelectedDateDetail(spending[day]);
-      setSelectedDate(formatDate(date).split('-'));
+      const formattedDate = dayjs(date).format('YYYY-MM-DD');
+      console.log('Clicked Date:', formattedDate); // 여기에 추가
+      const filteredItems = list.filter(item => dayjs(item.date).format('YYYY-MM-DD') === formattedDate);
+      setSelectedDateDetail(filteredItems);  // 기존의 setSelectedDateDetail 대신 setListDetail로 변경
+      setSelectedDate(formattedDate.split('-'));
+      console.log(filteredItems)
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
+      // 오류 처리 로직 추가
     }
   };
+  
 
-  // 일별 지출 합계 데이터
-  const getListData = () => {
-    let spendingList = [];
-    // spending 객체 for in 반복문으로 각 key: value 접근
-    for (let key in spending) {
-      // formatDate 형식 (2023-7-10)으로 날짜 구하기
-      const spendingDate = formatDate(spending[key][0].date);
-      // 일 지출 합계
-      const sum = spending[key].reduce((acc, cur) => (acc += cur.amount), 0);
-      // spendingList 배열에 객체 데이터 {2023/7/10, 2860106} 넣기
-      spendingList.push({ spendingDate, sum });
-    }
-    return spendingList;
-  };
 
-  // 일 지출 합계 조회 API (antd)
-  const dateCellRender = (value) => {
-    const listData = getListData();
-    const formattedValue = value.format('YYYY-MM-DD');
-    // for 반복문 index에 접근
-    for (let i = 0; i < listData.length; i++) {
-      // listData의 spendingDate와 value(날짜)비교
-      if (listData[i].spendingDate === formatDate(value)) {
-        // value 와 같은 날에 아래 p 태그 출력
-        return (
-          <p
-            style={{
-              fontSize: 10,
-              marginTop: 16,
-              color: '#fc037b',
-              wordBreak: 'break-all', // 너비보다 글자가 긴 경우, 줄바꿈
-              lineHeight: 1,
-              textAlign: 'center',
-            }}
-          >
-            ₩ {formatPrice(listData[i].sum)}
-          </p>
-        );
-      }
-    }
-  };
+const dateCellRender = (value) => {
+  const formattedValue = value.format('YYYY-MM-DD');
+  // 현재 날짜에 해당하는 지출 데이터를 찾아서 출력
+
+  const filteredData = list.filter(item => dayjs(item.date).format('YYYY-MM-DD') === formattedValue);
+  // 해당 날짜의 지출 데이터가 있을 경우 출력
+  if (filteredData.length > 0) {
+    // 해당 날짜의 지출 데이터가 있을 경우 총 합을 계산
+    const totalAmount = filteredData.reduce((acc, item) => acc + item.amount, 0);
+    return (
+      <p
+        style={{
+          fontSize: 10,
+          marginTop: 16,
+          color: '#fc037b',
+          wordBreak: 'break-all',
+          lineHeight: 1,
+          textAlign: 'center',
+        }}
+      >
+        ₩ {formatPrice(totalAmount)}
+      </p>
+    );
+  }
+
+  // 해당 날짜의 지출 데이터가 없을 경우 빈 값을 반환하거나 다른 처리를 수행할 수 있습니다.
+  return null;
+};
+
 
   // 월별 지출 데이터
-  const getMonthData = (value) => {
-    for (let i = 0; i < monthlySpending.length; i++) {
-      // monthlySpending 데이터 해당 월에 지출액 출력
-      if (monthlySpending[i]._id === value.format('YYYY-MM')) {
-        return formatPrice(monthlySpending[i].totalAmount);
-      }
-    }
+  const getTotalAmountByMonth = (date) => {
+    const formattedMonth = dayjs(date).format('YYYY-MM');
+    const filteredItems = list.filter(item => dayjs(item.date).format('YYYY-MM') === formattedMonth);
+    const totalAmount = filteredItems.reduce((acc, item) => acc + item.amount, 0);
+    return totalAmount;
   };
+  
+  
   // 월별 지출 조회 API (antd)
   const monthCellRender = (value) => {
-    // 해당 월 totalamount
-    const num = getMonthData(value);
+    const num = getTotalAmountByMonth(value);
     return num ? (
       <div className="notes-month">
         <span style={{ color: '#eb2f96' }}>₩ {num}</span>
       </div>
     ) : null;
   };
-  return (
-    <>
-      {isLoading ? (
-        <Loading />
-      ) : (
-        <>
-          <StyledCalender
-            value={dayjs(selectedDate).add(9, 'hour')}
-            cellRender={cellRender}
-            onSelect={(date) => getDetailList(date)}
-            onPanelChange={handlePanelChange}
-          />
-          {currentMode === 'month' ? (
-            <ItemList
-              listDetail={selectedDateDetail}
-              itemChangedHandler={itemChangedHandler}
+    return (
+      <>
+        {isLoading ? (
+          <Loading />
+        ) : (
+          <>
+            <StyledCalender
+              value={dayjs(selectedDate).add(9, 'hour')}
+              cellRender={cellRender}
+              onSelect={(date) => getDetailList(date)}
+              onPanelChange={handlePanelChange}
             />
-          ) : null}
-        </>
-      )}
-    </>
-  );
-};
+            {currentMode === 'month' ? (
+              <ItemList
+                list={list} 
+                setList={setList}
+                listDetail={selectedDateDetail}
+                itemChangedHandler={itemChangedHandler}
+              />
+            ) : null}
+          </>
+        )}
+      </>
+    );
+  };
 
-export default TheCalendar;
+  export default TheCalendar;
 
 const StyledCalender = styled(Calendar)`
   width: 100%;

@@ -1,0 +1,47 @@
+[
+  {
+    "_id": 1,
+    "amount": 19900,
+    "userId": "Team2",
+    "category": "음식",
+    "description": "설명",
+    "date": "2024-01-09T10:30:00.000Z",
+    "totalAmount": 180
+  },
+  {
+    "_id": 1,
+    "amount": 3200,
+    "userId": "Team2",
+    "category": "교통비",
+    "date": "2024-01-13T01:20:00.000Z",
+    "totalAmount": 180
+  },
+  {
+    "_id": 1,
+    "amount": 50000,
+    "userId": "Team2",
+    "category": "적금",
+    "description": "설명",
+    "date": "2024-01-01T10:30:00.000Z",
+    "totalAmount": 180
+  },
+  {
+    "_id": 1,
+    "amount": 19900,
+    "userId": "Team2",
+    "category": "음식",
+    "description": "설명",
+    "date": "2024-02-02T10:30:00.000Z",
+    "totalAmount": 180
+  },
+  {
+    "_id": 1,
+    "amount": 19900,
+    "userId": "Team2",
+    "category": "음식",
+    "description": "설명",
+    "date": "2024-01-09T10:30:00.000Z",
+    "totalAmount": 180
+  }
+  
+]

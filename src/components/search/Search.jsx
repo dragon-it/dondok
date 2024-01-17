@@ -38,7 +38,7 @@ const Search = () => {
       );
 
       if (!response.ok) {
-        throw new Error('네트워크 응답이 올바르지 않습니다');
+
       }
       const res = await response.json();
 
@@ -50,7 +50,7 @@ const Search = () => {
         }),
       );
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
+
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +67,7 @@ const Search = () => {
       );
 
       if (!response.ok) {
-        throw new Error('네트워크 응답이 올바르지 않습니다');
+
       }
       const res = await response.json();
       const categorySuggestions = Array.from(
@@ -75,7 +75,7 @@ const Search = () => {
       ); // 중복 제거
       setSuggestions(categorySuggestions);
     } catch (error) {
-      alert('오류가 발생했습니다.', error);
+
     } finally {
       setIsLoading(false);
     }

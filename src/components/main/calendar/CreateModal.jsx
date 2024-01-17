@@ -1,67 +1,55 @@
 import React, { useState } from 'react';
 import { Button, Modal, Input, DatePicker } from 'antd';
-import axios from 'axios';
-import PropTypes from 'prop-types';
 import moment from 'moment';
-
 
 const CreateModal = (props) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState(0);
-  const [dateTime, setDateTime] = useState(
-    moment().add(9, 'hours').toISOString(),
-  );
+  const [dateTime, setDateTime] = useState(moment().add(9, 'hours').toISOString());
 
-  console.log(category);
-
-  const modalStyle = {
-    borderRadius: '10px',
-    padding: 0,
-  };
-
-  // Modal
   const showModal = () => {
     setIsModalOpen(true);
   };
+
   const handleSubmit = async () => {
-    const number = parseInt(amount.replace(/,/g, ''));
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    const body = {
-      amount: number,
-      userId: 'Team2',
-      category: category,
-      date: dateTime,
-    };
     try {
-      const res = await axios.post(
-        'https://chickenlecture.xyz/api/expenses',
-        body,
-        { headers: headers },
-      );
-      if (res) {
-        setIsModalOpen(false);
-        props.itemChangedHandler();
-        setDateTime(moment().add(9, 'hours').toISOString());
-        setCategory('');
-        setAmount('');
-      } else {
-        alert('등록실패');
-      }
+      // API 호출 부분 대신에 더미 데이터 처리
+      setIsModalOpen(false);
+      
+      // 새로운 항목 추가 후, 새로운 list를 생성
+      const newItem = {
+        _id: 2,
+        category,
+        amount,
+        date: dateTime,
+      };
+
+      const updatedList = [...props.list, newItem]; // 기존 list에 새로운 항목 추가
+
+      // props.itemChangedHandler 호출 시, 새로운 list를 함께 전달
+      props.itemChangedHandler(updatedList);
+      console.log(newItem)
+
+      // 기존의 state들 초기화
+      setDateTime(moment().add(9, 'hours').toISOString());
+      setCategory('');
+      setAmount('');
     } catch (e) {
-      alert('오류가 발생했습니다.', e);
+      // 오류 처리
     }
   };
+
   const handleCancel = () => {
     setIsModalOpen(false);
     setCategory('');
     setAmount('');
   };
+
   const dateChangeHandler = (date) => {
     setDateTime(date.add(9, 'hour').toISOString());
   };
+
   const categoryChangeHandler = (e) => {
     setCategory(e.target.value);
   };
@@ -75,22 +63,26 @@ const CreateModal = (props) => {
 
   return (
     <>
-      <div style={{ position: 'relative',
-                      width:'100%',
-                      margin:'0 auto',
-                      height:'auto', }}>
-          <Button
-            onClick={showModal}
-            style={{ position: 'fixed', 
-            bottom: 'calc(9%)', 
+      <div style={{
+        position: 'relative',
+        width: '100%',
+        margin: '0 auto',
+        height: 'auto',
+      }}>
+        <Button
+          onClick={showModal}
+          style={{
+            position: 'fixed',
+            bottom: 'calc(9%)',
             right: 'calc(50% - 180px)',
-            backgroundColor: 'rgb(200, 244, 255)', 
-            borderRadius: 80, 
-            width: 50, 
-            height:50 ,
-            fontSize: 25, 
-            paddingTop:0,}}
-          >
+            backgroundColor: 'rgb(200, 244, 255)',
+            borderRadius: 80,
+            width: 50,
+            height: 50,
+            fontSize: 25,
+            paddingTop: 0,
+          }}
+        >
           +
         </Button>
       </div>
@@ -101,12 +93,11 @@ const CreateModal = (props) => {
         onCancel={handleCancel}
         okText="등록하기"
         cancelText="취소"
-        style={modalStyle}
         okButtonProps={{ disabled: amount ? false : true }}
       >
         <DatePicker
           placeholder={moment().format('YYYY-MM-DD HH:mm')}
-          selected={dateTime}
+          selected={moment(dateTime)}
           format="YYYY-MM-DD HH:mm"
           showTime
           onChange={(date) => dateChangeHandler(date)}
